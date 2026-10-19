@@ -29,15 +29,11 @@ py -3 -m venv .venv
 
 Com o servidor ativo, abra <https://localhost:8443/>. O navegador pode avisar que o certificado HTTPS é local; aceite o aviso para continuar. Mantenha a janela do servidor aberta enquanto usa o aplicativo.
 
-## Testar em um celular na mesma rede Wi-Fi
+## Aplicativo online
 
-1. Conecte o computador e o celular à mesma rede Wi-Fi.
-2. No Windows, execute `ipconfig` e anote o **Endereço IPv4** do adaptador **Wi-Fi**.
-3. No celular, abra `https://IP-DO-COMPUTADOR:8443/`, substituindo o texto pelo endereço encontrado. Por exemplo: `https://192.168.1.2:8443/`.
-4. Se o Windows solicitar, permita o Python na rede privada. Se necessário, permita conexões de entrada na porta TCP `8443` para o perfil de rede privada.
-5. Aceite o aviso do certificado local no navegador do celular.
+Abra a versão publicada pelo GitHub Pages em <https://pablodiasvieira-dev.github.io/skyhopper/>. O endereço usa HTTPS e pode ser aberto diretamente no celular; o `index.html` encaminha para o aplicativo.
 
-Se a página carregar mas os sensores não funcionarem, confira as permissões de orientação e localização do navegador. Para alinhar, aponte o telescópio para uma estrela conhecida, toque em **Alinhar**, selecione essa estrela no mapa e aguarde a contagem terminar. Depois escolha um alvo pela busca ou pelo mapa e acompanhe a seta e os valores angulares.
+A página é servida pela branch `gh-pages`. Quando uma nova versão compilada é enviada a essa branch, o GitHub Pages atualiza o aplicativo online.
 
 ## Uso do mapa
 

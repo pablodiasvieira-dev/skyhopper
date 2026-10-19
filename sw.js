@@ -26,7 +26,7 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(cacheName).then(cache => {
       return cache.addAll([
-        `/astrohopper.html`
+        new URL('astrohopper.html', self.registration.scope).toString()
       ])
       .then(() => self.skipWaiting());
     })
