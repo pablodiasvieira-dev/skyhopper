@@ -1,0 +1,44 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>AstroHopper - Web Application for Sky Navigation Manual</title>
+<meta charset="UTF-8">
+</head>
+<body>
+<h1 id="astrohopper-pt-br">AstroHopper pt-BR</h1>
+<p>Este repositório é um fork pessoal do <a href="https://github.com/artyom-beilis/skyhopper">AstroHopper original</a>, criado para manter a tradução em português do Brasil e desenvolver melhorias próprias para a busca e a orientação no céu.</p>
+<p>O aplicativo ajuda a localizar estrelas e outros objetos celestes usando os sensores do celular, como giroscópio, acelerômetro e bússola. Ele funciona no navegador e pode continuar disponível offline depois que os recursos forem carregados.</p>
+<h2 id="o-que-esta-versao-acrescenta">O que esta versão acrescenta</h2>
+<ul>
+<li>Interface e manual em português do Brasil. A Wikipédia abre em português quando esse idioma está selecionado.</li>
+<li>Sugestões de objetos enquanto você digita na busca, com seleção por toque, mouse ou teclado.</li>
+<li>Botão <code>×</code> para desmarcar o alvo atual.</li>
+<li>Linha e seta de orientação até o alvo, com os deslocamentos angulares atualizados durante o apontamento. A indicação fica ciano enquanto você se move e verde quando o sistema reconhece o alinhamento.</li>
+<li>Cruzeta e rótulo para mostrar a direção atual do telescópio. O rótulo pode ser “Você”, “Seu telescópio”, um texto personalizado ou ficar oculto.</li>
+<li>Leituras de altitude e azimute da direção física do telescópio.</li>
+<li>Arraste para explorar outras regiões do mapa sem alterar a posição real do telescópio. Use <code>↻</code> para voltar à visualização dos sensores.</li>
+</ul>
+<p>O manual traduzido está em <a href="po/README_pt_BR.md">po/README_pt_BR.md</a>.</p>
+<h2 id="executar-no-computador">Executar no computador</h2>
+<p>É necessário ter Python instalado. No PowerShell do Windows, na pasta do projeto:</p>
+<p><code>powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe deploy.py
+.\.venv\Scripts\python.exe pyserver.py</code></p>
+<p>Com o servidor ativo, abra <a href="https://localhost:8443/">https://localhost:8443/</a>. O navegador pode avisar que o certificado HTTPS é local; aceite o aviso para continuar. Mantenha a janela do servidor aberta enquanto usa o aplicativo.</p>
+<h2 id="aplicativo-online">Aplicativo online</h2>
+<p>Abra a versão publicada pelo GitHub Pages em <a href="https://pablodiasvieira-dev.github.io/skyhopper/">https://pablodiasvieira-dev.github.io/skyhopper/</a>. O endereço usa HTTPS e pode ser aberto diretamente no celular; o <code>index.html</code> encaminha para o aplicativo.</p>
+<p>A página é servida pela branch <code>gh-pages</code>. Quando uma nova versão compilada é enviada a essa branch, o GitHub Pages atualiza o aplicativo online.</p>
+<h2 id="uso-do-mapa">Uso do mapa</h2>
+<ul>
+<li>Pesquise o nome de uma estrela, planeta ou objeto celeste e selecione uma das sugestões.</li>
+<li>Para remover a seleção, toque em <code>×</code> ao lado da busca.</li>
+<li>A cruzeta identifica para onde o telescópio está apontando; o marcador do alvo e a linha tracejada mostram a direção a alcançar.</li>
+<li>Arraste o mapa para explorar o céu. O movimento altera apenas a visualização; <code>↻</code> restaura a visão baseada nos sensores.</li>
+<li>Use o botão de configurações para escolher o idioma, personalizar o rótulo de apontamento e ajustar as demais opções.</li>
+</ul>
+<h2 id="relacao-com-o-projeto-original">Relação com o projeto original</h2>
+<p>Este fork mantém a atribuição e a licença do AstroHopper. O projeto original foi criado por <a href="https://github.com/artyom-beilis/skyhopper">Artyom Beilis</a>. Consulte <a href="COPYING.md">COPYING.md</a> para os termos de licença e o repositório original para a documentação e o histórico do projeto.</p>
+<p>As alterações deste fork são mantidas no repositório de Pablo Dias Vieira. Elas não são incorporadas automaticamente ao projeto original; propostas de contribuição ao AstroHopper original são feitas separadamente por meio de Pull Requests.</p></body>
+</html>
