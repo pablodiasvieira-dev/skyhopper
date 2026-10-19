@@ -23,42 +23,32 @@ button { border-radius:2mm; height:10mm; font-size:5mm ; text-align:center; vert
 .only_tiny_b { display : none }
 
 #search_field_main_ok {
-    position:absolute;
-    top:31mm;
-    right:10%;
+    position:static;
     height:10mm;
     border:0px;
-    margin-left:1mm;
+    margin:0;
     display:none;
     background-color: transparent;
 }
 
 #main_search_button {
-    position:absolute;
-    right:27mm;
+    position:static;
     margin:0;
-    top:3mm;
 }
 
 #search_field_main {
-    position:absolute;
-    right:12mm;
-    top:3mm;
+    position:static;
     margin:0;
     border-radius:2mm;
-    width:15mm;
+    width:38mm;
     padding-left:1mm;
-    font-size:66%;
+    font-size:80%;
 }
 
 #search_field_main:focus {
-    position:absolute;
-    right:10%;
-    left:10%;
-    top:31mm;
-    padding:0;
-    width:80%;
-    font-size:100%;
+    position:static;
+    width:38mm;
+    font-size:80%;
 }
 
 
@@ -114,13 +104,36 @@ input[type=text], input[type=text]:focus, input[type=submit], input[type=number]
 
 
 input[type=submit] { width:10mm;}
+
+.search_container {
+    position:fixed;
+    top:3mm;
+    right:30mm;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    gap:1mm;
+}
+.search_suggestions {
+    position:fixed; top:15mm; right:30mm; left:auto; width:50mm; z-index:10;
+    max-height:45vh; overflow-y:auto; background:black; border:1px solid red; color:red;
+}
+.search_suggestion {
+    display:block; width:100%; padding:2mm 3mm; border:0; border-bottom:1px solid #600;
+    background:black; color:red; font:inherit; text-align:left;
+}
+.search_suggestion.active, .search_suggestion:hover, .search_suggestion:focus { background:#300; outline:1px solid red; }
+.search_empty { padding:2mm 3mm; color:#f66; }
+#myCanvas { touch-action:none; }
 </style>
 <body>
 <canvas style="position:absolute; left:0; top:0; z-index:-1"  id="myCanvas" width="640" height="480"> </canvas>
-<div class="only_full">
-    <input id="search_field_main" class="search_field" autocomplete="off" type="text" value="search" onkeyup="mainSearchDoneCheck(event);" oninput="mainSearchFindTarget(this.value);" onfocus="mainSearchFocus();" onclick="mainSearchFocus();" onfocusout="mainSearchOnFocusChange(false);" onfocusin="mainSearchOnFocusChange(true)" />
-    <button class="incdec_but search_background" id="main_search_button" style="display:none; margin-right:1mm;" onclick="reShearchMain();">&nbsp;</button>
+<div class="search_container">
+    <input id="search_field_main" class="search_field" autocomplete="off" type="text" value="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search_suggestions" onkeydown="mainSearchDoneCheck(event);" oninput="mainSearchFindTarget(this.value);" onfocus="mainSearchFocus();" onclick="mainSearchFocus();" onfocusout="mainSearchOnFocusChange(false);" onfocusin="mainSearchOnFocusChange(true)" />
+    <button class="incdec_but search_background" id="main_search_button" aria-label="Search" style="margin-right:1mm;" onclick="reShearchMain();">&nbsp;</button>
+    <button class="incdec_but" id="clear_target_button" aria-label="Clear target" style="display:none" onclick="clearTarget();">&times;</button>
     <button id="search_field_main_ok" ></button>
+    <div id="search_suggestions" class="search_suggestions" role="listbox" style="display:none"></div>
 </div>
 <p class="first_line_controls" >
 	<span class="only_full"><button class="ui_but tr" onclick="align();">Align</button></span>
@@ -130,6 +143,7 @@ input[type=submit] { width:10mm;}
 	<button class="comp_but nocompass_background" id="nocompass_button" style="display:none">&nbsp;</button>
 	<button class="comp_but manual_background" id="hand_button" style="display:none;" onclick="manualMode();">&nbsp;</button>
 	<button class="comp_but compass_background" id="compass_button" style="display:none" onclick="compassMode();">&nbsp;</button>
+	<button class="comp_but" id="reset_view_button" style="display:none" onclick="resetMapView();" title="Reset map view">&#x21bb;</button>
 </p>
 <p class="first_line_controls only_full_b">
 		<button class="incdec_but" onclick="incFOV();">-</button>
@@ -289,6 +303,17 @@ input[type=submit] { width:10mm;}
 </tr>
 </table>
 
+<p>
+    <label for="pointing_label_preset" class="tr">Pointing label</label>
+    <select id="pointing_label_preset" onchange="pointingLabelPresetChanged()">
+        <option value="you" class="tr">You</option>
+        <option value="telescope" class="tr">Your telescope</option>
+        <option value="custom" class="tr">Custom</option>
+        <option value="hidden" class="tr">Hidden</option>
+    </select>
+    <input id="pointing_label_custom" maxlength="32" style="max-width:35%" oninput="savePointingLabel()" />
+</p>
+
 <div class='l2r' id="wl_edit" style="display:none;">
 	<p>name: dso1, dso2, dso3, &#x2026;</p>
 	<p>
@@ -439,6 +464,10 @@ var global_start_zoom_size = null;
 var global_start_zoom = null;
 var global_allow_pinch_zoom = true;
 var global_toch_start_time = null;
+var global_drag_distance = 0;
+var global_ignore_next_click = false;
+var global_view_beta_offset = 0;
+var global_view_alpha_offset = 0;
 var global_target_index = -1;
 var global_align_index = -1;
 var global_expecting_select = null;
@@ -471,6 +500,10 @@ var global_full_screen = false;
 var global_status = "";
 
 var global_watchlist = null;
+var global_search_matches = [];
+var global_search_active_index = -1;
+var global_pointing_label_preset = 'you';
+var global_pointing_label_custom = '';
 
 function showManual(v)
 {
@@ -577,54 +610,168 @@ function normalizeName(name)
 
 function reShearchMain()
 {
-    findTargetByName(document.getElementById('search_field_main').value);
+    mainSearchConfirm();
 }
 
 function mainSearchOnFocusChange(val)
 {
     if(!val) {
+        setTimeout(mainSearchCloseSuggestions,150);
         var isOk = document.getElementById('search_field_main_ok');
         isOk.style.display = 'none';
         var el =  document.getElementById('search_field_main');
-        var content = el.value;
-        reShearchMain();
-        if(content.trim()=='') {
+        if(el.value.trim()=='') {
             el.value=_tr("search");
         }
-    }
-    var but = document.getElementById('main_search_button');
-    if(!val && global_target_index >= 0) {
-        but.style.display='inline';
-    }
-    else {
-        but.style.display='none';
     }
 }
 
 function mainSearchOnSubmit()
 {
-    document.getElementById('search_field_main').blur();
+    mainSearchConfirm();
     return false;
 }
 
 function mainSearchDoneCheck(e)
 {
-    if(e.key == "Enter") {
+    if(e.key == "ArrowDown" || e.key == "ArrowUp") {
+        if(global_search_matches.length) {
+            e.preventDefault();
+            var offset = e.key == "ArrowDown" ? 1 : -1;
+            global_search_active_index = (global_search_active_index + offset + global_search_matches.length) % global_search_matches.length;
+            renderSearchSuggestions();
+        }
+    }
+    else if(e.key == "Enter") {
+        e.preventDefault();
         mainSearchOnSubmit();
     }
+    else if(e.key == "Escape") {
+        e.preventDefault();
+        mainSearchCloseSuggestions();
+    }
 }
+
+function getSearchMatches(name)
+{
+    var query = normalizeName(name.trim());
+    if(!query || typeof allstars_index_name == 'undefined')
+        return [];
+    var matches = [];
+    var seen = new Set();
+    for(var i=0;i<allstars_index_name.names.length && matches.length < 8;i++) {
+        var candidate = allstars_index_name.names[i];
+        if(candidate.startsWith(query)) {
+            var index = allstars_index_name.index[i];
+            if(!seen.has(index)) {
+                seen.add(index);
+                matches.push(index);
+            }
+        }
+    }
+    return matches;
+}
+
+function renderSearchSuggestions()
+{
+    var list = document.getElementById('search_suggestions');
+    var input = document.getElementById('search_field_main');
+    list.innerHTML = '';
+    if(!input.value.trim()) {
+        list.style.display = 'none';
+        input.setAttribute('aria-expanded','false');
+        return;
+    }
+    if(!global_search_matches.length) {
+        var empty = document.createElement('div');
+        empty.className = 'search_empty tr_dynamic';
+        empty.textContent = _tr('No objects found');
+        list.appendChild(empty);
+    }
+    else {
+        for(var i=0;i<global_search_matches.length;i++) {
+            var star = allstars[global_search_matches[i]];
+            var option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'search_suggestion' + (i == global_search_active_index ? ' active' : '');
+            option.setAttribute('role','option');
+            option.setAttribute('aria-selected',i == global_search_active_index ? 'true' : 'false');
+            option.textContent = star.name + (star.t ? ' · ' + star.t : '');
+            option.onmousedown = (function(index) { return function(event) { selectSearchSuggestion(event,index); }; })(global_search_matches[i]);
+            option.ontouchstart = (function(index) { return function(event) { selectSearchSuggestion(event,index); }; })(global_search_matches[i]);
+            option.onclick = function(event) { event.preventDefault(); event.stopPropagation(); };
+            list.appendChild(option);
+        }
+    }
+    list.style.display = 'block';
+    input.setAttribute('aria-expanded','true');
+}
+
+function mainSearchCloseSuggestions()
+{
+    document.getElementById('search_suggestions').style.display = 'none';
+    document.getElementById('search_field_main').setAttribute('aria-expanded','false');
+}
+
+function mainSearchSelect(index)
+{
+    global_target_index = index;
+    document.getElementById('search_field_main').value = allstars[index].name;
+    document.getElementById('search_field_main_ok').style.display = 'inline';
+    document.getElementById('search_field_main_ok').innerHTML = '✓';
+    mainSearchCloseSuggestions();
+    showHideInfoIcon();
+    updateTargetControls();
+}
+
+function updateTargetControls()
+{
+    var clear = document.getElementById('clear_target_button');
+    if(clear)
+        clear.style.display = global_target_index >= 0 ? 'inline' : 'none';
+}
+
+function clearTarget()
+{
+    global_target_index = -1;
+    document.getElementById('search_field_main').value = _tr('search');
+    document.getElementById('search_field_main_ok').style.display = 'none';
+    mainSearchCloseSuggestions();
+    showHideInfoIcon();
+    updateTargetControls();
+}
+
+function selectSearchSuggestion(event,index)
+{
+    event.preventDefault();
+    event.stopPropagation();
+    mainSearchSelect(index);
+}
+
+function mainSearchConfirm()
+{
+    if(global_search_matches.length) {
+        var index = global_search_active_index >= 0 ? global_search_matches[global_search_active_index] : global_search_matches[0];
+        mainSearchSelect(index);
+    }
+    document.getElementById('search_field_main').blur();
+}
+
 function mainSearchFindTarget(name)
 {
-    findTargetByName(name.trim());
-    var el = document.getElementById('search_field_main');
+    global_search_matches = getSearchMatches(name);
+    global_search_active_index = -1;
+    renderSearchSuggestions();
     var isOk = document.getElementById('search_field_main_ok');
     isOk.style.display = 'inline';
-    isOk.innerHTML= (global_target_index>=0) ? "✓" : "✗";;
+    isOk.innerHTML= global_search_matches.length ? "✓" : "✗";
 }
 function mainSearchFocus()
 {
-    document.getElementById('search_field_main').value="";
-    event.stopPropagation();
+    var el = document.getElementById('search_field_main');
+    if(el.value == _tr('search'))
+        el.value="";
+    mainSearchFindTarget(el.value);
 }
 
 function findTargetByName(name ='')
@@ -654,12 +801,14 @@ function findTargetByName(name ='')
 		global_target_index = allstars_index_name.index[found_index];
 		found.innerHTML = allstars[global_target_index].name;
         showHideInfoIcon();
+		updateTargetControls();
 		return true;
 	}
 	else {
 		global_target_index = -1;
 		found.innerHTML = '';
         showHideInfoIcon();
+		updateTargetControls();
 		return false;
 	}
 }
@@ -735,6 +884,7 @@ function resetAll()
 	findTargetByName();
 	global_target_index = -1;
     showHideInfoIcon();
+	updateTargetControls();
 	document.getElementById('find_status').innerHTML = '';
 	global_align_index = -1;
 	setUseGyro(false);
@@ -894,12 +1044,14 @@ function crossProd(a,b)
 		 a[0]*b[1] - a[1]*b[0] ];
 }
 
-function getCameraRays()
+function getCameraRays(view_alpha_offset=0,view_beta_offset=0)
 {
 	// zxy
 	// after Mul comonents are [S,E,D]
 	var alpha = global_use_gyro ? gdata.alpha_gyro + gdata.alpha_diff : gdata.alpha + gdata.alpha_user_offset;
-	var M = getRotationMatrix(alpha,gdata.beta,gdata.gamma);
+	alpha += view_alpha_offset;
+	var beta = gdata.beta + view_beta_offset;
+	var M = getRotationMatrix(alpha,beta,gdata.gamma);
 	//var top = mvec(M,[1,0,0]);
 	//var lft = mvec(M,[0,1,0]);
 	//var fwd = mvec(M,[0,0,-1]);
@@ -960,6 +1112,11 @@ function sprod(v1,v2)
 function cameraBearing(RAd,DEd,cameraRays)
 {
 	var ray = rayFromPos(RAd,DEd);
+	return cameraBearingForRay(ray,cameraRays);
+}
+
+function cameraBearingForRay(ray,cameraRays)
+{
 	var top = cameraRays[0];
 	var lft = cameraRays[1];
 	var fwd = cameraRays[2];
@@ -1211,58 +1368,165 @@ function plotLines(camRays)
 }
 
 
-function plotCross()
+function getWaypointState(bearing)
 {
-	context.strokeStyle = global_style.cross;
-	context.fillStyle = global_style.cross;
-	context.lineWidth = 3;
-	var dirs = [[1,0],[0,1],[-1,0],[0,-1]];
-	var length = 50;
-	var offset =10;
-	for(var i=0;i<dirs.length;i++) {
-		context.moveTo(canvas.width/2 + offset*dirs[i][0],canvas.height/2 + offset*dirs[i][1]);
-		context.lineTo(canvas.width/2 + length*dirs[i][0],canvas.height/2 + length*dirs[i][1]);
-	}
-	context.stroke();
+	var vertical = Math.abs(Math.atan2(bearing.y,bearing.z) / Math.PI * 180);
+	var horizontal = Math.abs(Math.atan2(bearing.x,bearing.z) / Math.PI * 180);
+	return {
+		vertical: vertical,
+		horizontal: horizontal,
+		reached: global_use_gyro && Math.max(vertical,horizontal) <= 1
+	};
 }
 
-function plotBearing(xyz)
+function plotCross(origin,color)
 {
+	context.strokeStyle = color;
+	context.fillStyle = color;
+	context.lineWidth = 2;
 	context.beginPath();
-	context.strokeStyle = global_style.bearing;
-	context.fillStyle = global_style.bearing;
-	context.lineWidth = 5;
-	context.arc(canvas.width/2,canvas.height/2,10,0,2*Math.PI,false);
-	context.moveTo(canvas.width/2,canvas.height/2);
-	var dx = xyz.x;
-	var dy = -xyz.y;
-	var r = 1 / Math.sqrt(dx*dx+dy*dy);
-	dx = dx*r;
-	dy = dy*r;
-	var length = 100;
-	var pos = xyzTo2d(xyz);
-	if(pos) {
-		var px = canvas.width * (pos.x - 0.5); 
-		var py = canvas.height * (pos.y - 0.5);
-		var dist = Math.sqrt(px*px + py*py);
-		if(dist < length)
-			length = dist;
-	}
-	context.lineTo(canvas.width/2 + dx * length,canvas.height/2 + dy * length);
-	var updn = (dy > 0 ? 'Down' : 'Up' ) + ' ' + Math.abs(Math.atan2(-xyz.y,xyz.z) / Math.PI * 180).toFixed(1) + '\u00b0';
-	var left = (dx > 0 ? 'Right' : 'Left' ) + ' ' + Math.abs(Math.atan2(xyz.x,xyz.z) / Math.PI * 180).toFixed(1) + '\u00b0';
+	context.moveTo(origin.x - 24,origin.y);
+	context.lineTo(origin.x + 24,origin.y);
+	context.moveTo(origin.x,origin.y - 24);
+	context.lineTo(origin.x,origin.y + 24);
 	context.stroke();
-	context.lineWidth = 0;
-	context.font = largeF('Serif',6);
-	context.strokeStyle = global_style.bearing;
-	context.fillStyle = global_style.bearing;
-	context.textBaseline = 'middle';
-	context.textAlign = 'end';
-	context.fillText(updn,canvas.width - 5,canvas.height / 2)
+	context.beginPath();
+	context.arc(origin.x,origin.y,5,0,2*Math.PI,false);
+	context.fill();
+}
+
+function plotPointingLabel(origin)
+{
+	var label = getPointingLabel();
+	if(!label || !origin)
+		return;
+	context.font = largeF('Sans',4);
+	context.fillStyle = global_style.cross;
 	context.textAlign = 'center';
-	context.textBaseline = 'bottom';
-	context.fillText(left,canvas.width/2,canvas.height - 5)
-}			
+	context.textBaseline = 'top';
+	context.fillText(label,origin.x,Math.min(canvas.height - 5,origin.y + 30));
+}
+
+function plotWaypointMarker(position,color)
+{
+	if(!position)
+		return;
+	context.strokeStyle = color;
+	context.fillStyle = color;
+	context.lineWidth = 2;
+	context.beginPath();
+	context.arc(position.x,position.y,8,0,2*Math.PI,false);
+	context.stroke();
+	context.beginPath();
+	context.arc(position.x,position.y,2.5,0,2*Math.PI,false);
+	context.fill();
+}
+
+function waypointPosition(xyz)
+{
+	var position = xyzTo2d(xyz);
+	if(position)
+		return {x:position.x * canvas.width,y:position.y * canvas.height};
+	position = xyzTo2d(xyz,false);
+	if(!position)
+		return null;
+	return {
+		x:Math.max(18,Math.min(canvas.width - 18,position.x * canvas.width)),
+		y:Math.max(18,Math.min(canvas.height - 18,position.y * canvas.height))
+	};
+}
+
+function plotDirectionLabel(text,x,y,color)
+{
+	context.font = largeF('Sans',4);
+	context.fillStyle = color;
+	context.textAlign = 'center';
+	context.textBaseline = 'middle';
+	context.fillText(text,x,y);
+}
+
+function plotBearing(target_xyz,origin_xyz,origin,bearing)
+{
+	if(!origin)
+		return;
+	var state = getWaypointState(bearing);
+	var color = state.reached ? '#28d15c' : '#32d9ff';
+	var target_pos = xyzTo2d(target_xyz);
+	if(target_pos)
+		target_pos = {x:target_pos.x * canvas.width,y:target_pos.y * canvas.height};
+
+	var dx = target_xyz.x - origin_xyz.x;
+	var dy = -(target_xyz.y - origin_xyz.y);
+	var radius = Math.sqrt(dx*dx+dy*dy);
+	if(radius > 0.0001) {
+		dx /= radius;
+		dy /= radius;
+		var length;
+		if(target_pos) {
+			var distance = Math.sqrt((target_pos.x-origin.x)*(target_pos.x-origin.x) + (target_pos.y-origin.y)*(target_pos.y-origin.y));
+			length = distance;
+		}
+		var end_x;
+		var end_y;
+		if(target_pos) {
+			var target_dx = target_pos.x - origin.x;
+			var target_dy = target_pos.y - origin.y;
+			var target_distance = Math.sqrt(target_dx*target_dx + target_dy*target_dy);
+			var target_gap = 7;
+			if(target_distance > target_gap) {
+				end_x = target_pos.x - target_dx / target_distance * target_gap;
+				end_y = target_pos.y - target_dy / target_distance * target_gap;
+			}
+			else {
+				end_x = target_pos.x;
+				end_y = target_pos.y;
+			}
+		}
+		else {
+			var max_x = dx > 0 ? (canvas.width - 18 - origin.x) / dx : (origin.x - 18) / -dx;
+			var max_y = dy > 0 ? (canvas.height - 18 - origin.y) / dy : (origin.y - 18) / -dy;
+			length = Math.max(0,Math.min(max_x,max_y));
+			end_x = origin.x + dx * length;
+			end_y = origin.y + dy * length;
+		}
+		var arrow_dx = end_x - origin.x;
+		var arrow_dy = end_y - origin.y;
+		var arrow_length = Math.sqrt(arrow_dx*arrow_dx + arrow_dy*arrow_dy);
+		if(arrow_length > 0) {
+			arrow_dx /= arrow_length;
+			arrow_dy /= arrow_length;
+		}
+		context.strokeStyle = color;
+		context.lineWidth = 1.5;
+		context.setLineDash([5,5]);
+		context.beginPath();
+		context.moveTo(origin.x,origin.y);
+		context.lineTo(end_x,end_y);
+		context.stroke();
+		context.setLineDash([]);
+		if(!state.reached && arrow_length > 12) {
+			var arrow_size = 10;
+			context.fillStyle = color;
+			context.beginPath();
+			context.moveTo(end_x,end_y);
+			context.lineTo(end_x - arrow_size * (arrow_dx * 0.866 - arrow_dy * 0.5),end_y - arrow_size * (arrow_dy * 0.866 + arrow_dx * 0.5));
+			context.lineTo(end_x - arrow_size * (arrow_dx * 0.866 + arrow_dy * 0.5),end_y - arrow_size * (arrow_dy * 0.866 - arrow_dx * 0.5));
+			context.closePath();
+			context.fill();
+		}
+	}
+
+	plotCross(origin,color);
+	plotWaypointMarker(target_pos,color);
+	if(state.reached) {
+		plotDirectionLabel('✓',origin.x + 34,origin.y - 34,color);
+		return;
+	}
+	var vertical_arrow = bearing.y >= 0 ? '↑' : '↓';
+	var horizontal_arrow = bearing.x >= 0 ? '→' : '←';
+	plotDirectionLabel(vertical_arrow + ' ' + state.vertical.toFixed(1) + '°',origin.x,origin.y - 36,color);
+	plotDirectionLabel(horizontal_arrow + ' ' + state.horizontal.toFixed(1) + '°',origin.x + 45,origin.y,color);
+}
 
 
 function logObject(thestar)
@@ -1336,7 +1600,10 @@ function plotStars()
 	global_targets_list=[];
 	gdata.time = Date.now();
     updateDebugTime(gdata.time);
-	var camRays = getCameraRays();
+	var telescopeRays = getCameraRays();
+	var camRays = getCameraRays(global_view_alpha_offset,global_view_beta_offset);
+	var telescope_xyz = cameraBearingForRay(telescopeRays[2],camRays);
+	var telescope_pos = waypointPosition(telescope_xyz);
 	context.fillStyle = "black";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	context.fillStyle = global_style.star;
@@ -1376,8 +1643,9 @@ function plotStars()
 	if(global_target_index >= 0) {
 		var star = allstars[global_target_index];
 		var xyz = cameraBearing(star.RA,star.DE,camRays);
-		plotBearing(xyz);
-		var target_pos = plotStar(star,camRays,3);
+		var bearing = cameraBearing(star.RA,star.DE,telescopeRays);
+		plotBearing(xyz,telescope_xyz,telescope_pos,bearing);
+		var target_pos = plotStar(star,camRays,0);
         // handle a case were target < mag but it is valid align target
         // ususally it means it is shown due to search
         if(target_pos && validAlignType(star.t)) {
@@ -1394,12 +1662,15 @@ function plotStars()
             }
 
         }
+		plotPointingLabel(telescope_pos);
 	}
-	else if(global_use_gyro) {
-		plotCross();
+	else {
+		var pointing_pos = telescope_pos || {x:canvas.width / 2,y:canvas.height / 2};
+		plotCross(pointing_pos,global_style.cross);
+		plotPointingLabel(pointing_pos);
 	}
 	plotLines(camRays);
-	plotAltAz(camRays[2]);
+	plotAltAz(telescopeRays[2]);
 	var passed = Date.now() - start;
 	if(passed > global_expected_frame_rate_ms / 2) {
 		setTimeout(plotStars,global_expected_frame_rate_ms);
@@ -1432,12 +1703,19 @@ function selectTarget(index)
 	findTargetByName();
 	global_target_index = index;
     showHideInfoIcon()
+	updateTargetControls();
 
 	//global_expecting_select = null;
 }
 
 function selectionEvent(e)
 {
+	if(e.target && e.target.closest && e.target.closest('button, input, select, textarea, a, .config_div, .search_container, .search_suggestions'))
+		return;
+	if(global_ignore_next_click) {
+		global_ignore_next_click = false;
+		return;
+	}
 	let x = e.clientX;
 	let y = e.clientY;
 	let min_dist = 1e100;
@@ -1451,7 +1729,10 @@ function selectionEvent(e)
 			min_index = global_targets_list[i].index;
 		}
 	}
-	if(global_expecting_select) {
+	var selection_radius = 32;
+	if(min_dist > selection_radius * selection_radius)
+		return;
+	if(global_expecting_select && min_index >= 0) {
 		global_expecting_select(min_index);
 	}
 }
@@ -1488,7 +1769,8 @@ function showObjectInfo()
         else {
 			target_name = src_name;
 		}
-		showWiki("https://en.wikipedia.org/w/index.php?search=" + encodeURIComponent(target_name));
+		var wiki_language = global_lang == 'pt_BR' ? 'pt' : 'en';
+		showWiki("https://" + wiki_language + ".wikipedia.org/w/index.php?search=" + encodeURIComponent(target_name));
 	}
 }
 
@@ -1610,11 +1892,7 @@ function noCompass()
 
 function manualMode()
 {
-	global_use_compass = false;
-	gdata.alpha_user_offset = gdata.alpha;
-	gdata.alpha = 0;
-	document.getElementById("compass_button").style.display="inline";
-	document.getElementById("hand_button").style.display="none";
+	resetMapView();
 }
 
 function compassMode()
@@ -1622,14 +1900,23 @@ function compassMode()
 	global_use_compass = true;
 	gdata.alpha_user_offset = 0;
 	gdata.alpha = gdata.compass_alpha;
+	resetMapView();
 	document.getElementById("compass_button").style.display="none";
 	document.getElementById("hand_button").style.display="inline";
+}
+
+function resetMapView()
+{
+	global_view_alpha_offset = 0;
+	global_view_beta_offset = 0;
+	document.getElementById('reset_view_button').style.display = 'none';
 }
 
 function manualDown(e)
 {
 	global_prev_xy = {"x":e.touches[0].clientX,"y":e.touches[0].clientY };
     global_toch_start_time = Date.now(); 
+    global_drag_distance = 0;
     if(e.touches.length == 2 && global_allow_pinch_zoom) {
         let dx = e.touches[0].clientX - e.touches[1].clientX;
         let dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -1644,6 +1931,9 @@ function manualMove(e)
 		return;
 	
 	var xy = {"x":e.touches[0].clientX,"y":e.touches[0].clientY };
+    var dx_drag = xy.x - global_prev_xy.x;
+    var dy_drag = xy.y - global_prev_xy.y;
+    global_drag_distance += Math.sqrt(dx_drag*dx_drag + dy_drag*dy_drag);
     if(e.touches.length == 2 && global_start_zoom && global_allow_pinch_zoom) {
         let dx = e.touches[0].clientX - e.touches[1].clientX;
         let dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -1662,9 +1952,11 @@ function manualMove(e)
     }
 
 
-	moveSky(global_prev_xy,xy);
+	if(e.touches.length == 1)
+		moveSky(global_prev_xy,xy);
 	global_prev_xy = xy;
     global_toch_start_time = null;
+    e.preventDefault();
 }
 function manualUp(e)
 {
@@ -1675,22 +1967,57 @@ function manualUp(e)
     global_start_zoom_size = null;
 
     var touch_end = Date.now();
-    if(global_toch_start_time && touch_end - global_toch_start_time < 500) { 
+    if(global_drag_distance < 6 && global_toch_start_time && touch_end - global_toch_start_time < 500) {
         // no move and there is less then 0.5s delay between toch and release
         selectionEvent({"clientX":global_prev_xy.x,"clientY":global_prev_xy.y})
     }
 	global_prev_xy = null;
     global_toch_start_time = null;
+    global_ignore_next_click = true;
 }
 function moveSky(prev,cur)
 {
-	if(global_use_compass)
-		return;
 	if(!prev || !cur)
 		return;
 	var fov =  getFOV().lr;
-	var da = (cur.x - prev.x) / canvas.width * fov;;
-	gdata.alpha_user_offset += da;
+	var da = (cur.x - prev.x) / canvas.width * fov;
+	var db = (cur.y - prev.y) / canvas.height * getFOV().td;
+	global_view_alpha_offset += da;
+	global_view_beta_offset = Math.max(-89,Math.min(89,global_view_beta_offset + db));
+	document.getElementById('reset_view_button').style.display = 'inline';
+}
+
+function manualMouseDown(e)
+{
+    if(e.button != 0)
+        return;
+    global_prev_xy = {"x":e.clientX,"y":e.clientY};
+    global_toch_start_time = Date.now();
+    global_drag_distance = 0;
+}
+
+function manualMouseMove(e)
+{
+    if(!global_prev_xy || !(e.buttons & 1))
+        return;
+    var xy = {"x":e.clientX,"y":e.clientY};
+    var dx = xy.x - global_prev_xy.x;
+    var dy = xy.y - global_prev_xy.y;
+    global_drag_distance += Math.sqrt(dx*dx + dy*dy);
+    if(global_drag_distance > 3)
+        moveSky(global_prev_xy,xy);
+    global_prev_xy = xy;
+}
+
+function manualMouseUp(e)
+{
+    if(!global_prev_xy)
+        return;
+    if(global_drag_distance < 3)
+        selectionEvent({"clientX":e.clientX,"clientY":e.clientY});
+    global_ignore_next_click = true;
+    global_prev_xy = null;
+    global_toch_start_time = null;
 }
 
 function dontPropMouseDown(lst,events_list)
@@ -2282,7 +2609,7 @@ function configureValueOption(target,default_val,onchange)
     element.value = value;
     onchange(value);
     element.addEventListener('change',function(){
-        onchange(this.checked);
+        onchange(this.value);
         window.localStorage.setItem(name,this.value);
     });
 }
@@ -2303,6 +2630,41 @@ function configureCheckboxOption(target,default_val,onchange)
         onchange(this.checked);
         window.localStorage.setItem(name,this.checked ? '1' : '0');
     });
+}
+
+function pointingLabelPresetChanged()
+{
+    var preset = document.getElementById('pointing_label_preset').value;
+    var custom = document.getElementById('pointing_label_custom');
+    custom.style.display = preset == 'custom' ? 'inline' : 'none';
+    global_pointing_label_preset = preset;
+    global_pointing_label_custom = custom.value.trim().slice(0,32);
+    window.localStorage.setItem('opt_pointing_label_preset',preset);
+    window.localStorage.setItem('opt_pointing_label_custom',global_pointing_label_custom);
+}
+
+function savePointingLabel()
+{
+    global_pointing_label_custom = document.getElementById('pointing_label_custom').value.trim().slice(0,32);
+    window.localStorage.setItem('opt_pointing_label_custom',global_pointing_label_custom);
+}
+
+function setupPointingLabel()
+{
+    var preset = window.localStorage.getItem('opt_pointing_label_preset') || 'you';
+    var custom = window.localStorage.getItem('opt_pointing_label_custom') || '';
+    document.getElementById('pointing_label_preset').value = preset;
+    document.getElementById('pointing_label_custom').value = custom;
+    pointingLabelPresetChanged();
+}
+
+function getPointingLabel()
+{
+    if(global_pointing_label_preset == 'hidden')
+        return '';
+    if(global_pointing_label_preset == 'custom')
+        return global_pointing_label_custom || _tr('You');
+    return _tr(global_pointing_label_preset == 'telescope' ? 'Your telescope' : 'You');
 }
 
 function saveMagVal(val,name)
@@ -2393,6 +2755,7 @@ function setupConfigurableElements()
     configureCheckboxOption('U_checked',true,(v) => { global_show_obj.U = v; });
     configureValueOption('wiki_info_opt','day',(v) => { wikiInfoConfig(); });
     configureValueOption('lang_select','en',(v) => { langSelect(); });
+    setupPointingLabel();
 
     // turn off by default on iOS
     var agent = navigator.userAgent
@@ -2424,8 +2787,11 @@ document.body.addEventListener('click',selectionEvent);
 document.body.addEventListener('touchstart',manualDown);
 document.body.addEventListener('touchend',manualUp);
 document.body.addEventListener('touchcancel',manualUp);
-document.body.addEventListener('touchmove',manualMove);
-dontPropMouseDown(["ui_but","incdec_but","config_div","comp_but","search_field"],["click","touchstart","touchend","touchmove","touchcancel"]);
+document.body.addEventListener('touchmove',manualMove,{passive:false});
+document.body.addEventListener('mousedown',manualMouseDown);
+document.body.addEventListener('mousemove',manualMouseMove);
+document.body.addEventListener('mouseup',manualMouseUp);
+dontPropMouseDown(["ui_but","incdec_but","config_div","comp_but","search_field","search_suggestion"],["click","mousedown","touchstart","touchend","touchmove","touchcancel"]);
 global_expecting_select = selectTarget;
 
 window.addEventListener("load", () => {

@@ -283,3 +283,43 @@ msgstr ""
 #: [49]
 msgid "Font"
 msgstr ""
+
+#: astrohopper.html
+msgid "No objects found"
+msgstr ""
+
+#: astrohopper.html
+msgid "Up"
+msgstr ""
+
+#: astrohopper.html
+msgid "Down"
+msgstr ""
+
+#: astrohopper.html
+msgid "Left"
+msgstr ""
+
+#: astrohopper.html
+msgid "Right"
+msgstr ""
+
+#: [50]
+msgid "Pointing label"
+msgstr ""
+
+#: [51]
+msgid "You"
+msgstr ""
+
+#: [52]
+msgid "Your telescope"
+msgstr ""
+
+#: [53]
+msgid "Custom"
+msgstr ""
+
+#: [54]
+msgid "Hidden"
+msgstr ""

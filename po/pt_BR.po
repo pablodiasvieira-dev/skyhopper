@@ -291,3 +291,43 @@ msgstr "Objetos do usuário"
 #: [49]
 msgid "Font"
 msgstr "Fonte"
+
+#: astrohopper.html
+msgid "No objects found"
+msgstr "Nenhum objeto encontrado"
+
+#: astrohopper.html
+msgid "Up"
+msgstr "Cima"
+
+#: astrohopper.html
+msgid "Down"
+msgstr "Baixo"
+
+#: astrohopper.html
+msgid "Left"
+msgstr "Esquerda"
+
+#: astrohopper.html
+msgid "Right"
+msgstr "Direita"
+
+#: astrohopper.html
+msgid "Pointing label"
+msgstr "Rótulo do apontamento"
+
+#: astrohopper.html
+msgid "You"
+msgstr "Você"
+
+#: astrohopper.html
+msgid "Your telescope"
+msgstr "Seu telescópio"
+
+#: astrohopper.html
+msgid "Custom"
+msgstr "Personalizado"
+
+#: astrohopper.html
+msgid "Hidden"
+msgstr "Oculto"
