@@ -14,7 +14,7 @@ O aplicativo ajuda a localizar estrelas e outros objetos celestes usando os sens
 - Leituras de altitude e azimute da direção física do telescópio.
 - Arraste para explorar outras regiões do mapa sem alterar a posição real do telescópio. Use `↻` para voltar à visualização dos sensores.
 
-A especificação das melhorias e seu estado de implementação estão em [ESPECIFICACAO_MELHORIAS.md](ESPECIFICACAO_MELHORIAS.md). O manual traduzido está em [po/README_pt_BR.md](po/README_pt_BR.md).
+O manual traduzido está em [po/README_pt_BR.md](po/README_pt_BR.md).
 
 ## Executar no computador
 
